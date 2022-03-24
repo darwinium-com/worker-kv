@@ -56,6 +56,17 @@ impl PutOptionsBuilder {
             .map(|_| ())
             .map_err(KvError::from)
     }
+
+    /// put the value in the kv store and return promise
+    pub fn get_execute_promise(self) -> Result<Promise, KvError> {
+        let options_object = JsValue::from_serde(&self)?;
+        let promise: Promise = self
+            .put_function
+            .call3(&self.this, &self.name, &self.value, &options_object)?
+            .into();
+
+        Ok(promise)
+    }
 }
 
 /// A builder to configure list requests.
@@ -148,6 +159,20 @@ impl GetOptionsBuilder {
             .call2(&self.this, &self.name, &options_object)?
             .into();
         Ok(JsFuture::from(promise).await.map_err(KvError::from)?)
+    }
+
+    fn get_promise(self) -> Result<Promise, KvError> {
+        let options_object = JsValue::from_serde(&self)?;
+        let promise: Promise = self
+            .get_function
+            .call2(&self.this, &self.name, &options_object)?
+            .into();
+        Ok(promise)
+    }
+
+    /// Gets the value as a string and returns promise
+    pub fn get_text_promise(self) -> Result<Promise, KvError> {
+        self.value_type(GetValueType::Text).get_promise()
     }
 
     /// Gets the value as a string.

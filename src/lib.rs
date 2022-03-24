@@ -136,6 +136,14 @@ impl KvStore {
         JsFuture::from(promise).await?;
         Ok(())
     }
+
+    /// Deletes a key in the kv store.
+    pub fn get_delete_promise(&self, name: &str) -> Result<Promise, KvError> {
+        let name = JsValue::from(name);
+        let promise: Promise = self.delete_function.call1(&self.this, &name)?.into();
+        
+        Ok(promise)
+    }
 }
 
 /// The response for listing the elements in a KV store.
