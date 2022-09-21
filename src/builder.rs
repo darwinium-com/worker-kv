@@ -46,7 +46,7 @@ impl PutOptionsBuilder {
     }
     /// Puts the value in the kv store.
     pub async fn execute(self) -> Result<(), KvError> {
-        let options_object = JsValue::from_serde(&self)?;
+        let options_object = serde_wasm_bindgen::to_value(&self)?;
         let promise: Promise = self
             .put_function
             .call3(&self.this, &self.name, &self.value, &options_object)?
@@ -59,7 +59,7 @@ impl PutOptionsBuilder {
 
     /// put the value in the kv store and return promise
     pub fn get_execute_promise(self) -> Result<Promise, KvError> {
-        let options_object = JsValue::from_serde(&self)?;
+        let options_object = serde_wasm_bindgen::to_value(&self)?;
         let promise: Promise = self
             .put_function
             .call3(&self.this, &self.name, &self.value, &options_object)?
@@ -104,14 +104,13 @@ impl ListOptionsBuilder {
     }
     /// Lists the key value pairs in the kv store.
     pub async fn execute(self) -> Result<ListResponse, KvError> {
-        let options_object = JsValue::from_serde(&self)?;
+        let options_object = serde_wasm_bindgen::to_value(&self)?;
         let promise: Promise = self
             .list_function
             .call1(&self.this, &options_object)?
             .into();
-        JsFuture::from(promise)
-            .await?
-            .into_serde()
+        serde_wasm_bindgen::from_value(JsFuture::from(promise)
+            .await?)
             .map_err(KvError::from)
     }
 }
@@ -153,16 +152,16 @@ impl GetOptionsBuilder {
     }
 
     async fn get(self) -> Result<JsValue, KvError> {
-        let options_object = JsValue::from_serde(&self)?;
+        let options_object = serde_wasm_bindgen::to_value(&self)?;
         let promise: Promise = self
             .get_function
             .call2(&self.this, &self.name, &options_object)?
             .into();
-        Ok(JsFuture::from(promise).await.map_err(KvError::from)?)
+        JsFuture::from(promise).await.map_err(KvError::from)
     }
 
     fn get_promise(self) -> Result<Promise, KvError> {
-        let options_object = JsValue::from_serde(&self)?;
+        let options_object = serde_wasm_bindgen::to_value(&self)?;
         let promise: Promise = self
             .get_function
             .call2(&self.this, &self.name, &options_object)?
@@ -190,7 +189,7 @@ impl GetOptionsBuilder {
         Ok(if value.is_null() {
             None
         } else {
-            Some(value.into_serde().map_err(KvError::from)?)
+            Some(serde_wasm_bindgen::from_value(value).map_err(KvError::from)?)
         })
     }
 
@@ -210,7 +209,7 @@ impl GetOptionsBuilder {
     where
         M: DeserializeOwned,
     {
-        let options_object = JsValue::from_serde(&self)?;
+        let options_object = serde_wasm_bindgen::to_value(&self)?;
         let promise: Promise = self
             .get_with_meta_function
             .call2(&self.this, &self.name, &options_object)?
@@ -225,7 +224,7 @@ impl GetOptionsBuilder {
             if metadata.is_null() {
                 None
             } else {
-                Some(metadata.into_serde().map_err(KvError::from)?)
+                Some(serde_wasm_bindgen::from_value(metadata).map_err(KvError::from)?)
             },
         ))
     }
@@ -256,7 +255,7 @@ impl GetOptionsBuilder {
             if value.is_null() {
                 None
             } else {
-                Some(value.into_serde().map_err(KvError::from)?)
+                Some(serde_wasm_bindgen::from_value(value).map_err(KvError::from)?)
             },
             metadata,
         ))
